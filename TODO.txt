@@ -1,0 +1,36 @@
+
+
+
+Coding
+implement blocking queue obsever as standalone package and test it on its onw
+integrate the above observer with soap interface
+bring in read from zip and call the observer to get the messages
+
+implememt two observers for notifications to nomalized interface
+implement a transformer to go from normalized to database as standalone
+integrate the transformer with normalized observer (two differnt code that both
+share the transformer in compose)
+
+add persistence as sink to upset values from above again as unit that is standalone
+that gets composed to the observer
+
+DO cube search from database to return observable toreturn raw records
+Turn above to REST endpoint
+do the ui to shw the table
+
+Do the itinieary search from database as objservable   that returns available options for each day
+
+write a transformer that takes itinerary observer and prices it... or not available (may be price)
+write transformer that gets per day options and generates itinieary observables
+1) do the permutate  ... generate all combination   pass it to price trnasformer
+2)  do the reset service that returns n permutate
+3) do the ui to present the choices with price and list of rooms
+4) have roomstay as link in each row.
+
+--- FOr each strategy
+     write trnsformer
+     write rest to return n of them (after price transformed)
+     THEY are all viewed on same ui
+
+--- NOTE strategy is completly plugable.  so call method to get
+n recorsd with strategyxxx it returns n records in list.

@@ -1,0 +1,42 @@
+ To get resouce http://localhost:8080/webapi/myresource
+ http://localhost:8080/cube/myservlet
+ to get json
+ http://localhost:8080/cube/webapi/myresource/testjson
+
+get all from the JSON service
+http://localhost:8080/cube/webapi/testjson/getAll  (from database)
+post a save
+url http://localhost:8080/cube/webapi/testjson/save
+data {"i":30,"c":"ByeBye"}   (application/json)
+retruns 30 (the value of i)
+
+
+to get to metrics
+http://localhost:8080/cube/metrics/
+
+
+To get wsdl from the test service
+          http://localhost:8080/cube/soap/calcService?wsdl
+          http://localhost:8080/cube/soap/testService?wsdl
+
+For guice
+
+http://www.nailedtothex.org/roller/kyle/entry/lean-example-of-tomcat-82
+ http://stackoverflow.com/questions/15901617/publishing-jax-ws-webservice-with-guice-in-a-servlet-application
+
+For SOAP jax ws use cxf
+
+http://chathurangat.blogspot.com/2014/02/apache-cxf-first-jax-ws-soap-web.html
+
+
+
+Note: withput cxf then you need to run wsgen tool to generate some code
+otherwise you get
+ com.sun.xml.ws.model.RuntimeModelerException: runtime modeler error: Wrapper class guice.tomcat.jaxws.AddNumbers is not found. Have you run APT to generate them?
+
+
+For weld and config
+
+
+
+ https://docs.jboss.org/weld/reference/latest/en-US/html/environments.html
