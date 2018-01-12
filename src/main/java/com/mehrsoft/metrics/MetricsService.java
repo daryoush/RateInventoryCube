@@ -53,7 +53,7 @@ public class MetricsService {
         return metrics.register(MetricRegistry.name(clazz, name), g);
     }
 
-    //using guice metric modules you don;t need this anymore.
+    //using servlet metric modules you don;t need this anymore.
 //    @PostConstruct
 //    public void initMetrics() {
 //        JmxReporter reporter = JmxReporter.forRegistry(metrics)

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!--<link rel="stylesheet" type="text/css"-->
+          <!--href="https://cdn.datatables.net/r/ju-1.11.4/jqc-1.11.3,dt-1.10.8/datatables.min.css"/>-->
+
+
+    <script src="js/d3.min.js"></script>
+    <script src="js/vega.js"></script>
+    <script src="js/vega-lite.js"></script>    <!-- embed must be after vega and vegalite -->
+    <script src="js/vega-embed.js" charset="utf-8"></script>
+    <script src="js/vg-tooltip.js"></script>
+    <script src="js/lodash.min.js"></script>
+
+    <script src="js/jquery-3.1.0.js"></script>
+    <script src="js/jquery-ui.min.js"></script>
+
+    <script src="js/moment.min.js"></script>
+    <script src="js/datetime-moment.js"></script>
+    <script src="js/date-dd-MMM-yyyy.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/vg-tooltip.css">
+    <script src="js/datalib.min.js"></script>
+    <script src="js/jquery.dataTables.min.js"></script>
+
+    <script src="visjs/roomsearchCharts.js"></script>
+    <script src="visjs/parameterized.js"></script>
+    <style>
+        .top-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 320px;
+            height: 60px;
+            z-index: 1;
+        }
+
+        .search { /* Container just in case we want more than just the search input to come along */
+            position: absolute;
+            top: 450px;
+            left: 20px;
+            right: 20px;
+
+        }
+
+        .top {
+            position: fixed;
+            /*height: 250px; !* Space in here for search *!*/
+            /*padding-top: 40px;*/
+            background: gold;
+            z-index: 1;
+
+        }
+
+        table {
+            border-collapse: collapse;
+
+        }
+
+        td {
+            /*padding: 10px;*/
+            /*padding-left: 20px;*/
+            text-align: left;
+        }
+
+        th {
+            font-weight: bold;
+            /*padding: 10px;*/
+            /*padding-left: 20px;*/
+            text-align: left
+        }
+
+        thead {
+            border-bottom: 2px solid blue
+        }
+
+        .error {
+            width: 600px;
+            height: 50px;
+            font-size: 200%;
+            padding-top: 40px;
+            background-color: #333333;
+            text-align: center;
+            color: #FFFFFF;
+        }
+
+        .errrow {
+        }
+
+        .errtable {
+            width: 600px;
+            -moz-border-radius: 45px;
+            border-radius: 45px;
+            border: 1px solid black;
+        }
+
+    </style>
+
+    <script>
+        $(document).ready(function () {
+            $('.form_to_config').hide();
+            showHideMapping();
+
+            $("#from").val(new Date().toISOString().slice(0, 10));
+            $("#to").val(new Date().toISOString().slice(0, 10));
+
+
+            var hotelCodes = [59846, 40945, 40943, 37339, 36935,
+                59846, 71516, 49360, 71515, 59860,
+                46504, 49028, 49029, 49360, 49370, 49372, 57149, 57177, 57882, 57883,
+                57884, 57890, 57891, 57892, 57893, 57896, 57899, 57900, 57902, 57903,
+                59845, 59846, 59856, 59857, 59860, 59861, 59863, 59874, 59876, 59879,
+                59899, 59909, 60079, 60084, 60093, 60171, 60283, 66531, 66970, 67007,
+                67736, 69439, 69440, 69441, 69442, 70789, 70841, 70842, 70843, 70919,
+                70922, 70925, 70927, 70928, 70931, 71368, 71437, 71445, 71509, 71515, 71516,
+                71521, 71893, 71894, 72061, 849031, 971516];
+            $.map(hotelCodes, function (item, index) { // Iterates through a collection
+                $("#hotelID").append( // Append an object to the inside of the select box
+                        $("<option></option>") // Yes you can do this.
+                                .text(item)
+                                .val(item)
+                );
+            });
+
+            $("#searchForRoom").click(function () {
+                $('.form_to_config').hide();
+
+                $.ajax("webapi/roomRatesearch/search/room", {
+                    dataType: 'json',
+                    data: {
+                        "hotelId": $("#hotelID").val(),
+                        "from": $("#from").val(),
+                        "to": $("#to").val(),
+                        "mixRooms": $('#allowMultRoomType').is(':checked'),
+                        // Do initial search for any room at least one room, then let user refine it to the requirements
+                        "room": '*',  //$('#roomCategories').val().replace(/\s+/g, '').split(","),    // remove all blanks, split on ,
+                        "inv": 1   //$('#bookingLimit').val()
+                    },
+                    traditional: true,
+                    success: function (data) {
+
+                        if (!data.length) {
+                            alert("Empty Result Set!")
+                        }
+
+                        alert("Got some data, extract group attriutes and initialize the form");
+                        $('.form_to_config').show();
+
+                        //TODO get the style sheet locally....
+                    }
+                });
+
+            });
+        });
+
+        function plotData (data) {
+
+            if (!data.length) {
+                alert("Empty Result Set!")
+            }
+
+            // Vega style
+//                        var byPriceSpec = byPriceParameter().getSpecification(data);
+//                        parse(byPriceSpec);
+
+
+            // VEga lite style
+            var byPriceSpec = byPrice().getSpecification(data);
+            var byPriceEmbedSpec = {
+                mode: "vega-lite",  // Instruct Vega-Embed to use the Vega-Lite compiler
+                spec: byPriceSpec
+                // You can add more vega-embed configuration properties here.
+                // See https://github.com/vega/vega/wiki/Embed-Vega-Web-Components#configuration-propeties for more information.
+            };
+            // Embed the visualization in the container with id `vis`
+            vg.embed("#vis", byPriceEmbedSpec, function (error, result) {
+                // Callback receiving the View instance and parsed Vega spec
+                // result.view is the View, which resides under the '#vis' element
+                // result.view is the Vega View, vlSpec is the original Vega-Lite specification
+                vl.tooltip(result.view, byPriceSpec);
+
+            });
+
+            var byBookingLimitSpec = byBookingLimit().getSpecification(data);
+            var byBookingLimitEmbedSpec = {
+                mode: "vega-lite",  // Instruct Vega-Embed to use the Vega-Lite compiler
+                spec: byBookingLimitSpec
+                // You can add more vega-embed configuration properties here.
+                // See https://github.com/vega/vega/wiki/Embed-Vega-Web-Components#configuration-propeties for more information.
+            };
+            // Embed the visualization in the container with id `vis`
+            vg.embed("#vis_bookinglimit", byBookingLimitEmbedSpec, function (error, result) {
+                // Callback receiving the View instance and parsed Vega spec
+                // result.view is the View, which resides under the '#vis' element
+                // result.view is the Vega View, vlSpec is the original Vega-Lite specification
+                vl.tooltip(result.view, byBookingLimitSpec);
+
+            });
+
+            drawTable(data);
+            $("#inventoryChartLink").attr("href", 'hotelInventoryVisualization.html?from=' + $("#from").val() +  '&to=' + $("#to").val() + '&hotel=' + $("#hotelID").val());
+
+        }
+
+
+        function drawTable(data) {
+
+            var byRoom = _(data)
+                    .sort(function(x){ return x.totalPrice;})
+                    .groupBy( function(x) { return x.rooms})
+                    .map(function (x) {
+                        return x;   // just gets the arrays out
+                    })
+                    .value();
+
+            var mappings = JSON.parse($('#mapping').val());
+            $('#example').DataTable({
+                "destroy": true,
+                paging: false,
+                "aaData": data,
+                "iDisplayLength": 100,
+                "order": [[ 2, "asc" ]],
+                "aoColumns": [
+
+                    {
+                        "mDataProp": "rooms",
+                        "mRender": function (data, type, full) {
+                            if ($('#domappings').is(':checked')) {
+                                return mappings[data] ? mappings[data] : 'NA (' + data + ')';
+                            } else {
+                                return data;
+                            }
+                        }
+
+                    },
+                    {
+                        "mDataProp": "rates",
+                        "mRender": function (data, type, full) {
+                            if ($('#domappings').is(':checked')) {
+                                return mappings[data] ? mappings[data] : 'NA (' + data + ')';
+                            } else {
+                                return data;
+                            }
+                        }
+
+                    },
+                    {
+                        "mDataProp": "totalPrice",
+                        "defaultContent": "",
+                        "mRender": function (data, type, full) {
+                            return data;
+                           // var currencyCode = full.currencyCode ? full.currencyCode : "$";
+                           // return data ? currencyCode + (data * $('#bookingLimit').val()).toFixed(2) + " (" + data.toFixed(2) + ")" : "";
+                        }
+                    },
+                    {
+                        "mDataProp": "maxBookingLimit"
+                    },
+                    {
+                        "mDataProp": "hras",
+                        "defaultContent": "<i>Not set</i>",
+                        "mRender": function (data, type, full) {
+                            var newList = $.map(data, function (val, i) {
+                                return val.id + ":(" + val.date + ": " + val.roomCategory + ", " + val.rateCategory + ") $" + val.onePersonRateBeforeTax;
+                            });
+
+                            var joinedList = newList.join(",<br/>");
+                            return joinedList;
+                        }
+
+                    },
+
+                ]
+            })
+        }
+
+        function showHideMapping() {
+            if (!$('#domappings').is(':checked'))
+                $('.maps').hide()
+            else
+                $('.maps').show()
+        }
+
+
+        function parse(spec, div) {
+            vg.parse.spec(spec, function (error, chart) {
+                chart({el: div}).update();
+            });
+        }
+    </script>
+
+</head>
+<body>
+<div class="top">
+<h1>Restriction...</h1>
+<ul>
+    <li>Only a single order</li>
+    <li>Mix match Itinerary for mutli-room search.</li>
+    <li>Single Room any Rate for duration of stay.</li>
+    <li>Optionally, Multiple rooms in same Itinerary </li>
+    <li>Optionally, Mappings to map results</li>
+</ul>
+
+
+
+    <table>
+        <thead>
+        <th>Room Search</th>
+        </thead>
+        <tbody>
+        <tr>
+            <td>
+                <form name="ROOM SEARCH FORM" onsubmit="return RoomSearch()">
+                    <!--<div style="float:none; margin-left: 5px; margin-top: 20px; ">-->
+                    <div style="float: left">
+                        <table>
+                            <thead></thead>
+                            <tbody>
+                            <tr>
+                                <td>ID</td>
+                                <td><select name="HBSI Hotel ID" id="hotelID"/></td>
+                            </tr>
+                            <tr>
+                                <td>START:</td>
+                                <td><input type="text" name="from" id="from" value="2015-08-02"/></td>
+                            </tr>
+                            <tr>
+                                <td>END:</td>
+                                <td><input type="text" name="to" id="to" value="2015-08-02"/></td>
+                            </tr>
+                            <tr>
+                                <td>Allow Multiple Room Type</td>
+                                <td><input type="checkbox" id="allowMultRoomType"/></td>
+                            </tr>
+
+                            <tr class="form_to_config">
+                                    <td>ROOMS:</td>
+                                    <td><input type="text" id="roomCategories" value="*"/></td>
+                                </tr>
+                            <tr class="form_to_config">
+                                    <td>Number of Rooms:</td>
+                                    <td><input type="text" id="bookingLimit" value="1"/></td>
+                                </tr>
+                                <tr class="form_to_config">
+                                    <td>Mappings</td>
+                                    <td><input type="checkbox" id="domappings" onclick="showHideMapping()"/></td>
+                                </tr>
+
+                            <tr>
+                                <td/>
+                                <td class="maps">
+                        <textarea id="mapping" rows="4" cols="50">
+ {&#013;"EXEC" : "Executive Suite",&#013;"STE" : "STANDARD ROOM"&#013;}
+                            </textarea>
+                                    <!--<input type="text" id="mapping" style="width:100%;" style="width: 300px;" value='{"EXEC" : "Executive Suite"} '/>-->
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="button" value="Search" id="searchForRoom"/></td>
+                            </tr>
+                            <tr>
+                                <td><a id="inventoryChartLink" target="_blank">View Inventory Charts</a></td>
+
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+            </td>
+            <td>
+                <div id="vis"></div>
+                <div id="vis-tooltip" class="vg-tooltip"></div>
+            </td>
+            <td>
+                <div id="vis_bookinglimit"></div>
+                <div id="vis-bookinglimit-tooltip" class="vg-tooltip"></div>
+            </td>
+        </tr>
+    </table>
+</div>
+<div class="search">
+
+
+    <div id="results" style="float:none; margin-left: 5px;  display: none">
+
+
+        <table id="example" class="display" cellspacing="0" width="100%">
+            <thead>
+            <tr>
+                <th>Room</th>
+                <th>Rate</th>
+                <th>Cost</th>
+                <th>Booking Limit</th>
+                <th>Details</th>
+            </tr>
+            </thead>
+            <tbody id="resultBody">
+
+            </tbody>
+        </table>
+    </div>
+
+</div>
+<div>
+    <footer>Copyright</footer>
+</div>
+</body>
+
+</html>
+

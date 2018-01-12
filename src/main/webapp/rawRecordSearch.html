@@ -1,0 +1,373 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+    <title>Room Inventory Records</title>
+    <!--<link rel="stylesheet"-->
+          <!--href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">-->
+    <!--<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/r/ju-1.11.4/jqc-1.11.3,dt-1.10.8/datatables.min.css"/>-->
+
+    <!--<script src="//code.jquery.com/jquery-1.11.3.js"></script>-->
+    <!--<script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>-->
+    <!--<script src="js/jquery.dataTables.min.js"></script>-->
+    <!--<script src="js/moment.min.js"></script>-->
+    <!--<script src="js/datetime-moment.js"></script>-->
+    <!--<script src="js/date-dd-MMM-yyyy.js"></script>-->
+
+    <link rel="stylesheet"
+          href="css/jquery-ui.min.css">
+    <link rel="stylesheet" type="text/css"
+          href="css/jquery.dataTables.min.css"/>
+
+    <script src="js/jquery-3.1.0.js"></script>
+    <script src="js/jquery-ui.min.js"></script>
+    <script src="js/jquery.dataTables.min.js"></script>
+    <script src="js/moment.min.js"></script>
+    <script src="js/datetime-moment.js"></script>
+    <script src="js/date-dd-MMM-yyyy.js"></script>
+    <script src="js/vg-tooltip.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/vg-tooltip.css">
+    <script src="js/datalib.min.js"></script>
+
+    <script>
+
+
+        function drawTable(data) {
+            var mappings = JSON.parse($('#mapping').val());
+            $('#example').DataTable({
+                "destroy": true,
+                paging: false,
+                "aaData": data,
+                "iDisplayLength": 100,
+                "aoColumns": [
+                    {
+                        "mDataProp": "date",
+                        // type: 'datetime-moment'
+
+                    },
+                    {
+                        "mDataProp": "roomCategory",
+                        "mRender": function (data, type, full) {
+                            if( $('#domappings').is(':checked')) {
+                                return mappings[data]  ? mappings[data] :  'NA (' + data + ')';
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {"mDataProp": "rateCategory"},
+                    {
+                        "mDataProp": "bookingLimit",
+                        "defaultContent": "",
+                        "type": "numeric-comma",
+                    },
+                    {
+                        "mDataProp": "restrictions",
+                        "defaultContent": "<i>Not set</i>",
+                        "mRender": function (data, type, full) {
+                            var newList = $.map(data, function (val, i) {
+                                return val.status ? ("<br/>" + val.type + ":" + val.status) : null;
+                            });
+
+                            var joinedList = newList.join(", ");
+                            return joinedList;
+                        }
+
+                    },
+                    {
+                        "mDataProp": "los",
+                        "defaultContent": "<i>Not set</i>",
+                        "mRender": function (data, type, full) {
+                            var newList = $.map(data, function (val, i) {
+                                var arrival = val.arrival ? "<br/>" + val.type + " Arrival: " + val.arrival : null;
+                                return (arrival ? arrival : "") + (val.nonArrival ? "<br/>" + val.type + " Non_Arrival: " + val.nonArrival : "");
+                            });
+                            return $.grep(newList, Boolean).join(", ");
+//                                                                    var joinedList = newList.join(", ");
+//                                                                    return joinedList;
+                        }
+                    },
+                    {
+                        "mDataProp": "baseRateAfterTax",
+                        "defaultContent": "",
+                        "mRender": function (data, type, full) {
+                            var currencyCode = full.currencyCode ? full.currencyCode : "$";
+                            return data ? currencyCode + data : "";
+                        }
+                    },
+
+                    {
+                        "mDataProp": "onePersonRateAfterTax",
+                        "defaultContent": "",
+                        "mRender": function (data, type, full) {
+                            var currencyCode = full.currencyCode ? full.currencyCode : "$";
+                            return data ? currencyCode + data : "";
+                        }
+                    },
+                    {
+                        "mDataProp": "twoPersonRateAfterTax",
+                        "defaultContent": "",
+                        "mRender": function (data, type, full) {
+                            var currencyCode = full.currencyCode ? full.currencyCode : "$";
+                            return data ? currencyCode + data : "";
+                        }
+                    },
+                    {
+                        "mDataProp": "threePersonRateAfterTax",
+                        "defaultContent": "",
+                        "mRender": function (data, type, full) {
+                            var currencyCode = full.currencyCode ? full.currencyCode : "$";
+                            return data ? currencyCode + data : "";
+                        }
+                    },
+                    {
+                        "mDataProp": "fourPersonRateAfterTax",
+                        "defaultContent": "",
+                        "mRender": function (data, type, full) {
+                            var currencyCode = full.currencyCode ? full.currencyCode : "$";
+                            return data ? currencyCode + data : "";
+                        }
+                    },
+                    {
+                        "mDataProp": "ageQualifiedCodeAfterTax",
+                        "defaultContent": "",
+                        "mRender": function (data, type, full) {
+                            var currencyCode = full.currencyCode ? full.currencyCode : "$";
+                            return data ? currencyCode + data : "";
+                        }
+                    },
+
+                ]
+            })
+        }
+        $(document)
+                .ready(
+                        function () {
+
+                            var dateObj = new Date();
+                            var month = dateObj.getUTCMonth() + 1; //months from 1-12
+                            var day = dateObj.getUTCDate();
+                            var year = dateObj.getUTCFullYear();
+
+                            newdate = year + "-" + month + "-" + day
+
+                            $("#from").val(newdate);
+                            $("#to").val(newdate);
+
+
+
+                            var hotelCodes = [59846, 59846,59860,46504,67736,
+                                40945, 40943, 37339, 36935,71516,49029,
+                                71893,71515,971516,70842,49360,40943,40945,
+                                60171,49372,71894,57893,849031,49028,71437,
+                                59879,59845,70843,49370,60084,57891,57884,
+                                69442,57149,70841,57890,71521,59856,69439,60283,
+                                57177,70927,70928,71368,59876,59863,57883,
+                                67007,59861,59874,72061,70931,69441,57902,
+                                70922,70919,69440,57892,59899,71509,60093,
+                                66970,59909,57900,66531,70925,59857,71445,
+                                57899,60079,57903,57896,70789,57882];
+
+                            $.map(hotelCodes, function ( item, index) { // Iterates through a collection
+                                $("#hotelID").append( // Append an object to the inside of the select box
+                                        $("<option></option>") // Yes you can do this.
+                                                .text(item)
+                                                .val(item)
+                                );
+                            });
+
+
+                            $("#searchHotel")
+                                    .click(
+                                            function () {
+//                                                $("#results").hide();
+//                                                $("#resultBody").empty();
+
+                                                $('#roomCategories').val("");
+                                                $('#rateCategories').val("");
+
+                                                $("#results").show();
+                                                var queryURL = "webapi/rawsearch/availability/hotel/" + $("#hotelID").val() + "/from/" + $("#from").val() + "/to/" + $("#to").val();
+                                                $("#jsonlink").attr("href", queryURL);
+
+                                                $.getJSON(queryURL, null, function(data)
+                                                {
+                                                    if (!data.length) {
+                                                        alert("Empty Result Set!")
+                                                    }
+
+                                                    var rooms = $.unique($.map(data, function(x) { return x.roomCategory}))
+
+                                                    $.each(rooms, function (i, item) {
+                                                        $('#roomCategories').val($('#roomCategories').val()+' '+item);
+
+                                                    });
+
+                                                    var rate = $.unique($.map(data, function(x) { return x.rateCategory}))
+
+                                                    $.each(rate, function (i, item) {
+                                                        $('#rateCategories').val($('#rateCategories').val()+' '+item);
+                                                    });
+
+
+                                                    displayPermutation(data)
+                                                    drawTable(data);
+
+                                                    $("#updateResults").click(function() {
+                                                        var filteredData = $.grep(data, function(x) {
+                                                            var rooms =  $('#roomCategories').val();
+                                                            var rates = $('#rateCategories').val()
+                                                            return (rooms.indexOf(x.roomCategory) != -1 &&
+                                                                    rates.indexOf(x.rateCategory) != -1) &&
+                                                                    x.bookingLimit >= $('#bookingLimit').val();
+                                                        });
+                                                        displayPermutation(filteredData);
+
+                                                        drawTable(filteredData)
+                                                    });
+                                                });
+                                            });
+                        });
+
+
+
+        function displayPermutation(d){
+            var mm = {};
+
+            var noOfPermutation = 1;
+
+            $.map(d, function (x) {
+                if(mm[x.date] ==  undefined) mm[x.date]=[];
+                mm[x.date].push(x)
+            });
+
+            $.map(Object.keys(mm), function(k) {
+                noOfPermutation = noOfPermutation * mm[k].length;
+            });
+            $('#permutations').val(noOfPermutation);
+        }
+
+
+
+
+
+    </script>
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+
+        td {
+            padding: 10px;
+            padding-left: 20px;
+            text-align: left;
+        }
+
+        th {
+            font-weight: bold;
+            padding: 10px;
+            padding-left: 20px;
+            text-align: left
+        }
+
+        thead {
+            border-bottom: 2px solid blue
+        }
+
+        .error {
+            width: 600px;
+            height: 50px;
+            font-size: 200%;
+            padding-top: 40px;
+            background-color: #333333;
+            text-align: center;
+            color: #FFFFFF;
+        }
+
+        .errtable {
+            width: 600px;
+            -moz-border-radius: 45px;
+            border-radius: 45px;
+        }
+
+        .errrow {
+            border: 1px solid black;
+        }
+    </style>
+
+</head>
+<body>
+<h1>Hote Rate And Avaiability Cube Search</h1>
+
+
+<form name="HotelSearchForm" onsubmit="return hotelSearch()">
+
+
+    <div style="float:none; margin-left: 5px; margin-top: 20px; ">
+        <div style="float: left">
+
+            <label>ID </label>
+            <select name="HBSI Hotel ID" id="hotelID"/>
+            <!--<input type="text" name="from" id="hotelID" value="59846"/> -->
+            <label>From:</label>
+            <input type="text" name="from" id="from" value="2015-08-02"/>
+            <label>To:</label>
+            <input type="text" name="to" id="to" value="2015-08-02"/>
+            <input type="button" value="Search" id="searchHotel"/>
+        </div>
+    </div>
+
+</form>
+
+<br/><br/><br/>
+
+<div id="results" style="float:none; margin-left: 5px;  display: none">
+
+
+    <div><a id="jsonlink">Get Raw JSON</a></div>
+
+    <br/>
+    <div >
+
+        Rates: <input type="text"  id="rateCategories" style="width:100%;"/><br/>
+        Rooms: <input type="text"  id="roomCategories" style="width:100%;"/><br/>
+        Min Booking Limit: <input type="text"  id="bookingLimit" style="width:100%;" value="0"/><br/>
+        Permutations: <input type="text"  id="permutations" style="width:100%;" value="0"/><br/>
+        <input type="button" value="update" id="updateResults"/><br/>
+
+
+        Mappings <input type="checkbox" id="domappings"/>
+        <input type="text"  id="mapping" style="width:100%;" value='{"EXEC" : "Executive Suite"} '/><br/>
+    </div>
+
+
+
+
+    <table id="example" class="display" cellspacing="0" width="100%">
+        <thead>
+        <tr>
+            <th>Date</th>
+            <th>Room Type</th>
+            <th>Rate Plan</th>
+            <th>Booking Limit</th>
+            <th>Restrictions</th>
+            <th>LOS Rules</th>
+            <th>Base Rate</th>
+            <th>One Occ.</th>
+            <th>Two Occ.</th>
+            <th>Three Occ.</th>
+            <th>Four Occ.</th>
+            <th>Extra Child Rate</th>
+
+        </tr>
+        </thead>
+        <tbody id="resultBody">
+
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>
+

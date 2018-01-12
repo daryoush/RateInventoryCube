@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="js/d3.min.js"></script>
+    <script src="js/vega.js"></script>
+    <script src="js/vega-lite.js"></script>    <!-- embed must be after vega and vegalite -->
+    <script src="js/vega-embed.js" charset="utf-8"></script>
+    <script src="js/jquery-3.1.0.js"></script>
+    <script src="js/jquery-ui.min.js"></script>
+    <script src="js/jquery.dataTables.min.js"></script>
+
+    <script src="js/moment.min.js"></script>
+    <script src="js/datetime-moment.js"></script>
+    <script src="js/date-dd-MMM-yyyy.js"></script>
+    <script src="js/vg-tooltip.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/vg-tooltip.css">
+    <script src="js/datalib.min.js"></script>
+
+
+    <script src="visjs/roomsearchCharts.js"></script>
+
+    <script src="visjs/inventory.js"></script>
+
+    <style>
+        .top-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 320px;
+            height: 60px;
+            z-index: 1;
+        }
+
+        .search { /* Container just in case we want more than just the search input to come along */
+            position: absolute;
+            top: 400px;
+            left: 20px;
+            right: 20px;
+
+        }
+
+        .top {
+            position: fixed;
+            /*height: 250px; !* Space in here for search *!*/
+            /*padding-top: 40px;*/
+            background: gold;
+            z-index: 1;
+
+        }
+
+        table {
+            border-collapse: collapse;
+
+        }
+
+        td {
+            /*padding: 10px;*/
+            /*padding-left: 20px;*/
+            text-align: left;
+        }
+
+        th {
+            font-weight: bold;
+            /*padding: 10px;*/
+            /*padding-left: 20px;*/
+            text-align: left
+        }
+
+        thead {
+            border-bottom: 2px solid blue
+        }
+
+    </style>
+
+    <script>
+
+        //http://stackoverflow.com/questions/979975/how-to-get-the-value-from-the-get-parameters
+        var QueryString = function () {
+            // This function is anonymous, is executed immediately and
+            // the return value is assigned to QueryString!
+            var query_string = {};
+            var query = window.location.search.substring(1);
+            var vars = query.split("&");
+            for (var i = 0; i < vars.length; i++) {
+                var pair = vars[i].split("=");
+                // If first entry with this name
+                if (typeof query_string[pair[0]] === "undefined") {
+                    query_string[pair[0]] = decodeURIComponent(pair[1]);
+                    // If second entry with this name
+                } else if (typeof query_string[pair[0]] === "string") {
+                    var arr = [query_string[pair[0]], decodeURIComponent(pair[1])];
+                    query_string[pair[0]] = arr;
+                    // If third or later entry with this name
+                } else {
+                    query_string[pair[0]].push(decodeURIComponent(pair[1]));
+                }
+            }
+            return query_string;
+        }();
+
+        $(document).ready(function () {
+
+            var from = QueryString.from;
+            var to = QueryString.to;
+            var hotel = QueryString.hotel;
+
+            if (typeof from != 'undefined')  $("#from").val(from);
+            else $("#from").val(new Date().toISOString().slice(0, 10));
+            if (typeof to != 'undefined')  $("#to").val(to);
+            else $("#to").val(new Date().toISOString().slice(0, 10));
+
+
+            if (typeof hotel != 'undefined') {
+                var hotelCodes = [hotel];
+            } else {
+                var hotelCodes = [59846, 40945, 40943, 37339, 36935,
+                    59846, 71516, 49360, 71515, 59860,
+                    46504, 49028, 49029, 49360, 49370, 49372, 57149, 57177, 57882, 57883,
+                    57884, 57890, 57891, 57892, 57893, 57896, 57899, 57900, 57902, 57903,
+                    59845, 59846, 59856, 59857, 59860, 59861, 59863, 59874, 59876, 59879,
+                    59899, 59909, 60079, 60084, 60093, 60171, 60283, 66531, 66970, 67007,
+                    67736, 69439, 69440, 69441, 69442, 70789, 70841, 70842, 70843, 70919,
+                    70922, 70925, 70927, 70928, 70931, 71368, 71437, 71445, 71509, 71515, 71516,
+                    71521, 71893, 71894, 72061, 849031, 971516];
+            }
+            $.map(hotelCodes, function (item, index) { // Iterates through a collection
+                $("#hotelID").append( // Append an object to the inside of the select box
+                        $("<option></option>") // Yes you can do this.
+                                .text(item)
+                                .val(item)
+                );
+            });
+
+            $("#searchForRoom").click(fetchDataShowCharts);
+
+            if (typeof from != 'undefined' || typeof to != 'undefined' || typeof hotel  != 'undefined') fetchDataShowCharts();
+        });
+
+        function fetchDataShowCharts () {
+
+            var queryURL = "webapi/rawsearch/availability/hotel/" + $("#hotelID").val() + "/from/" + $("#from").val() + "/to/" + $("#to").val();
+
+            $.ajax(queryURL, {
+                dataType: 'json',
+                traditional: true,
+                success: function (data) {
+                    if (!data.length) {
+                        alert("Empty Result Set!")
+                    }
+
+
+                    // VEga lite style
+                    var invChart = inventoryChart().getSpecification(data);
+                    var invChartSpec = {
+                        mode: "vega-lite",  // Instruct Vega-Embed to use the Vega-Lite compiler
+                        spec: invChart
+                        // You can add more vega-embed configuration properties here.
+                        // See https://github.com/vega/vega/wiki/Embed-Vega-Web-Components#configuration-propeties for more information.
+                    };
+                    // Embed the visualization in the container with id `vis`
+                    vg.embed("#vis", invChartSpec, function (error, result) {
+                        // Callback receiving the View instance and parsed Vega spec
+                        // result.view is the View, which resides under the '#vis' element
+                        // result.view is the Vega View, vlSpec is the original Vega-Lite specification
+                        vl.tooltip(result.view, invChart);
+
+                    });
+
+
+                    var invSumChart = invSingleChart().getSpecification(data);
+                    var invSumChartSpec = {
+                        mode: "vega-lite",  // Instruct Vega-Embed to use the Vega-Lite compiler
+                        spec: invSumChart
+                        // You can add more vega-embed configuration properties here.
+                        // See https://github.com/vega/vega/wiki/Embed-Vega-Web-Components#configuration-propeties for more information.
+                    };
+                    // Embed the visualization in the container with id `vis`
+                    vg.embed("#vis_InvSummary", invSumChartSpec, function (error, result) {
+                        // Callback receiving the View instance and parsed Vega spec
+                        // result.view is the View, which resides under the '#vis' element
+                        // result.view is the Vega View, vlSpec is the original Vega-Lite specification
+                        vl.tooltip(result.view, invSumChart);
+
+                    });
+
+                }
+            });
+
+        }
+        function parse(spec) {
+            vg.parse.spec(spec, function (error, chart) {
+                chart({el: "#vis"}).update();
+            });
+        }
+
+
+    </script>
+
+</head>
+<body>
+
+
+<div class="top">
+
+
+    <table>
+        <thead>
+        <th>Inventory Search</th>
+        </thead>
+        <tbody>
+        <tr>
+            <td>
+                <form name="SEARCH FORM" onsubmit="return RoomSearch()">
+
+
+                    <!--<div style="float:none; margin-left: 5px; margin-top: 20px; ">-->
+                    <div style="float: left">
+                        <table>
+                            <thead></thead>
+                            <tbody>
+                            <tr>
+                                <td>ID</td>
+                                <td><select name="HBSI Hotel ID" id="hotelID"/></td>
+                            </tr>
+                            <tr>
+                                <td>START:</td>
+                                <td><input type="text" name="from" id="from" value="2015-08-02"/></td>
+                            </tr>
+                            <tr>
+                                <td>END:</td>
+                                <td><input type="text" name="to" id="to" value="2015-08-02"/></td>
+                            </tr>
+                            <tr>
+                                <td>ROOMS:</td>
+                                <td><input type="text" id="roomCategories" value="*"/></td>
+                            </tr>
+                            <tr>
+                                <td>Number of Rooms:</td>
+                                <td><input type="text" id="bookingLimit" value="1"/></td>
+                            </tr>
+
+                            <tr>
+                                <td><input type="button" value="Search" id="searchForRoom"/></td>
+                            </tr>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+
+
+</div>
+
+
+</td>
+
+<td>
+    <div id="vis_InvSummary"></div>
+    <div id="vis_InvSummary-tooltip" class="vg-tooltip"></div>
+</td>
+</tr>
+</table>
+</div>
+
+
+<div class="search">
+    <div id="vis"></div>
+    <div id="vis-tooltip" class="vg-tooltip"></div>
+
+    <div>
+        <footer>Copyright</footer>
+    </div>
+
+
+</body>
+</html>
+

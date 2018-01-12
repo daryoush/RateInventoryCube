@@ -1,14 +1,15 @@
 package com.mehrsoft.dao;
 
 import com.github.davidmoten.rx.jdbc.Database;
+import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.servlet.ServletException;
 import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.Optional;
@@ -17,15 +18,20 @@ import java.util.function.Supplier;
 /**
  * Created by ijet on 5/12/16.
  */
+
+@Singleton
 public class BaseDao {
     private final static Logger log = LoggerFactory.getLogger(BaseDao.class);
+
+
     // see http://www.nailedtothex.org/roller/kyle/tags/tomcat
+    // SEE META-INF/context.xml
      Context context;
      DataSource ds;
      Database db;
 
     @PostConstruct
-    public void init() throws ServletException {
+    public void init()  {
         try {
             log.debug("Init BaseDao");
             context = new InitialContext();
@@ -33,11 +39,19 @@ public class BaseDao {
             db = Database
                     .fromDataSource(ds);
             log.debug("Datasource " + ds);
+
         } catch (NamingException e) {
-            throw new ServletException(e);
+            throw new RuntimeException(e);
         }
     }
 
+    public Database getDb() {
+        return db;
+    }
+
+    public DataSource getDs() {
+        return ds;
+    }
 
     public static <T> Optional<T> resolve(Supplier<T> resolver) {
         try {

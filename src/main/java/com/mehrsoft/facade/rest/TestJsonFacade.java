@@ -14,7 +14,6 @@ import java.util.List;
  * Created by ijet on 5/10/16.
  */
 @Path("testjson")
-
 public class TestJsonFacade {
     private final static Logger log = LoggerFactory.getLogger(TestJsonFacade.class);
     @Inject

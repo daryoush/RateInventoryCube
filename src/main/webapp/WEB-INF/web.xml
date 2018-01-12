@@ -19,7 +19,7 @@
     </servlet-mapping>
 
     <listener>
-        <listener-class>com.mehrsoft.guice.GuiceServletContextListener</listener-class>
+        <listener-class>com.mehrsoft.servlet.GuiceServletContextListener</listener-class>
     </listener>
 
     <listener>
@@ -49,5 +49,14 @@
         <res-auth>Container</res-auth>
     </resource-ref>
 
+
+    <servlet>
+        <servlet-name>metrics</servlet-name>
+        <servlet-class>com.codahale.metrics.servlets.AdminServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>metrics</servlet-name>
+        <url-pattern>/metrics/*</url-pattern>
+    </servlet-mapping>
 
 </web-app>

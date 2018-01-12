@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- http://docs.oracle.com/cd/E13222_01/wls/docs103/webserv_adv/handlers.html -->
+<handler-chains xmlns="http://java.sun.com/xml/ns/javaee">
+    <handler-chain>
+        <handler>
+            <handler-class>com.mehrsoft.service.original.HBSISoapHandler</handler-class>
+        </handler>
+    </handler-chain>
+</handler-chains>

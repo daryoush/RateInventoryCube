@@ -37,7 +37,16 @@ public class AppCXFNonSpringServletImpl extends CXFNonSpringServlet{
         factory.setBus(bus);
 
 
-        Endpoint.publish("/testService", testSoapFacade);
+        if(false) {
+            System.out.println("__________________________________________");
+            System.out.println("________SOAP SERVICE IS DISABLED__________");
+            System.out.println("_ ENABLE IT IN AppCXFNonSprintgServletImpl_");
+            System.out.println("__________________________________________");
+
+        } else {
+
+            Endpoint.publish("/testService", testSoapFacade);
+        }
 
     }
 }
